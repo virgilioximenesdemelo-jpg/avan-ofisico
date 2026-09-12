@@ -1,43 +1,31 @@
-import express from 'express';
-import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const app = express();
-const PORT = 3000;
-
-// Increase payload size for base64 PDF/image uploads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// Lazy init for Gemini SDK
 let aiClient: GoogleGenAI | null = null;
 function getGenAI(): GoogleGenAI | null {
   if (!aiClient && process.env.GEMINI_API_KEY) {
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
     });
   }
   return aiClient;
 }
 
-// Endpoint de Saúde / API status
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', hasGeminiKey: Boolean(process.env.GEMINI_API_KEY) });
-});
+export default async function handler(req: any, res: any) {
+  // Configura CORS caso chamado de outra origem
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Endpoint para leitura e extração de Ficha de Campo via IA (Gemini 3.6 Flash)
-app.post('/api/parse-ficha', async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido.' });
+  }
+
   try {
-    const { fileBase64, mimeType, fileName } = req.body;
+    const { fileBase64, mimeType, fileName } = req.body || {};
 
     if (!fileBase64) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -45,15 +33,13 @@ app.post('/api/parse-ficha', async (req, res) => {
 
     const ai = getGenAI();
     if (!ai) {
-      console.warn('GEMINI_API_KEY não configurada. Retornando fallback.');
       return res.status(200).json({
         success: false,
-        message: 'GEMINI_API_KEY não configurada. Usando leitor local.',
+        message: 'GEMINI_API_KEY não configurada no Vercel. Configure nas variáveis de ambiente do projeto.',
         data: null
       });
     }
 
-    // Prepare inline data for Gemini
     const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
     const actualMimeType = mimeType || (fileName?.endsWith('.pdf') ? 'application/pdf' : 'image/png');
 
@@ -135,37 +121,15 @@ Se não conseguir ler algum campo específico, forneça estimativas razoáveis o
     const resultText = response.text || '{}';
     const parsedData = JSON.parse(resultText);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: parsedData
     });
   } catch (error: any) {
-    console.error('Erro na rota /api/parse-ficha:', error);
+    console.error('Erro no processamento da ficha:', error);
     return res.status(500).json({
       success: false,
       error: error.message || 'Falha ao processar arquivo via IA'
     });
   }
-});
-
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor SCLAF executando na porta ${PORT}`);
-  });
 }
-
-startServer();
