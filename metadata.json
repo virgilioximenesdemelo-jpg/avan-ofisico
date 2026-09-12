@@ -1,0 +1,6 @@
+{
+  "name": "SCLAF — Controle Linear de Avanço Físico",
+  "description": "Sistema corporativo de gestão e controle linear de avanço físico de obras rodoviárias do DNIT.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
