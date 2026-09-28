@@ -48,6 +48,10 @@ export interface RoadService {
   iconName: string;
   description: string;
   active: boolean;
+  contractId?: string; // ID do contrato específico ou vazio/'ALL' para catálogo geral
+  dnitStandard?: string; // Norma oficial DNIT (Ex: 'DNIT 031/2006-ES')
+  defaultThicknessCm?: number; // Espessura padrão pela norma DNIT (cm)
+  defaultWidthMeters?: number; // Largura padrão da faixa/pista DNIT (m)
 }
 
 export type TrackDirection = 

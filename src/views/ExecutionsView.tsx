@@ -18,8 +18,11 @@ import {
   Search,
   Filter,
   CheckCircle2,
-  X
+  X,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
+import { getDnitStandardForService } from '../data/dnitStandards';
 
 interface ExecutionsViewProps {
   activeContractId: string;
@@ -38,13 +41,26 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
   const [selectedContractId, setSelectedContractId] = useState<string>(
     activeContractId !== 'ALL' ? activeContractId : contracts[0]?.id || ''
   );
-  const [serviceId, setServiceId] = useState<string>(services[8]?.id || services[0]?.id || ''); // Default CBUQ
+  const [serviceId, setServiceId] = useState<string>(() => {
+    const ctrServices = services.filter(s => s.contractId === (activeContractId !== 'ALL' ? activeContractId : contracts[0]?.id) || !s.contractId || s.contractId === 'ALL');
+    return ctrServices[0]?.id || services[0]?.id || '';
+  });
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [kmInitial, setKmInitial] = useState<string>('105.000');
   const [kmFinal, setKmFinal] = useState<string>('107.500');
   const [direction, setDirection] = useState<TrackDirection>('Crescente');
-  const [thicknessCm, setThicknessCm] = useState<string>('5.0');
-  const [widthMeters, setWidthMeters] = useState<string>('7.2');
+  
+  // DNIT Auto-fill values and state
+  const initialSrv = services.find(s => s.id === (services[0]?.id));
+  const initialDnit = getDnitStandardForService(initialSrv?.name, initialSrv?.category, 'Crescente', initialSrv?.defaultThicknessCm, initialSrv?.defaultWidthMeters, initialSrv?.dnitStandard);
+
+  const [thicknessCm, setThicknessCm] = useState<string>(initialDnit.thicknessCm.toString());
+  const [widthMeters, setWidthMeters] = useState<string>(initialDnit.widthMeters.toString());
+  const [dnitNormInfo, setDnitNormInfo] = useState<{ normCode: string; normTitle: string } | null>({
+    normCode: initialDnit.normCode,
+    normTitle: initialDnit.normTitle,
+  });
+
   const [rdoNumber, setRdoNumber] = useState<string>('');
   const [teamLeader, setTeamLeader] = useState<string>('Enc. Antônio Carlos');
   const [observations, setObservations] = useState<string>('');
@@ -52,6 +68,57 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Auto-preenchimento das normas DNIT ao selecionar serviço
+  const applyDnitNorms = (targetSrvId: string, currentDirection: TrackDirection) => {
+    const s = services.find(srv => srv.id === targetSrvId);
+    if (!s) return;
+    const spec = getDnitStandardForService(
+      s.name,
+      s.category,
+      currentDirection,
+      s.defaultThicknessCm,
+      s.defaultWidthMeters,
+      s.dnitStandard
+    );
+    setThicknessCm(spec.thicknessCm.toString());
+    setWidthMeters(spec.widthMeters.toString());
+    setDnitNormInfo({
+      normCode: spec.normCode,
+      normTitle: spec.normTitle,
+    });
+  };
+
+  const handleContractChange = (newContractId: string) => {
+    setSelectedContractId(newContractId);
+    const contractServices = services.filter(s => s.contractId === newContractId || !s.contractId || s.contractId === 'ALL');
+    if (contractServices.length > 0 && !contractServices.some(s => s.id === serviceId)) {
+      const nextSrvId = contractServices[0].id;
+      setServiceId(nextSrvId);
+      applyDnitNorms(nextSrvId, direction);
+    }
+  };
+
+  const handleServiceChange = (newSrvId: string) => {
+    setServiceId(newSrvId);
+    applyDnitNorms(newSrvId, direction);
+  };
+
+  const handleDirectionChange = (newDirection: TrackDirection) => {
+    setDirection(newDirection);
+    const s = services.find(srv => srv.id === serviceId);
+    if (s) {
+      const spec = getDnitStandardForService(
+        s.name,
+        s.category,
+        newDirection,
+        s.defaultThicknessCm,
+        s.defaultWidthMeters,
+        s.dnitStandard
+      );
+      setWidthMeters(spec.widthMeters.toString());
+    }
+  };
 
   const activeContract = contracts.find(c => c.id === selectedContractId) || contracts[0];
   const allExecutions = db.getExecutions(activeContractId === 'ALL' ? undefined : activeContractId);
@@ -71,6 +138,22 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
     setObservations(exec.observations || '');
     setFormSuccess('');
     setFormError('');
+
+    const s = services.find(srv => srv.id === exec.serviceId);
+    if (s) {
+      const spec = getDnitStandardForService(
+        s.name,
+        s.category,
+        exec.direction,
+        s.defaultThicknessCm,
+        s.defaultWidthMeters,
+        s.dnitStandard
+      );
+      setDnitNormInfo({
+        normCode: spec.normCode,
+        normTitle: spec.normTitle,
+      });
+    }
   };
 
   const cancelEditExecution = () => {
@@ -80,6 +163,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
     setRdoNumber('');
     setFormSuccess('');
     setFormError('');
+    applyDnitNorms(serviceId, direction);
   };
 
   // Filtro de buscas
@@ -247,7 +331,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
               <label className="block text-slate-300 font-semibold mb-1">Contrato</label>
               <select
                 value={selectedContractId}
-                onChange={(e) => setSelectedContractId(e.target.value)}
+                onChange={(e) => handleContractChange(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500 font-mono"
               >
                 {contracts.map(c => (
@@ -259,17 +343,31 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Serviço / Camada Executada</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-300 font-semibold">Serviço / Camada Executada</label>
+                {dnitNormInfo && (
+                  <span className="text-[10px] text-blue-400 font-mono flex items-center space-x-1">
+                    <ShieldCheck className="w-3 h-3 text-blue-400" />
+                    <span>{dnitNormInfo.normCode}</span>
+                  </span>
+                )}
+              </div>
               <select
                 value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
+                onChange={(e) => handleServiceChange(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500 font-semibold"
               >
-                {services.map(s => (
-                  <option key={s.id} value={s.id}>
-                    Ord {s.executiveOrder}. {s.name} ({s.category})
-                  </option>
-                ))}
+                {(() => {
+                  const contractServices = services.filter(
+                    s => s.contractId === selectedContractId || !s.contractId || s.contractId === 'ALL'
+                  );
+                  const displayServices = contractServices.length > 0 ? contractServices : services;
+                  return displayServices.map(s => (
+                    <option key={s.id} value={s.id}>
+                      Ord {s.executiveOrder}. {s.name} ({s.category}) {s.dnitStandard ? `[${s.dnitStandard}]` : ''}
+                    </option>
+                  ));
+                })()}
               </select>
             </div>
 
@@ -289,7 +387,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
                 <label className="block text-slate-300 font-semibold mb-1">Lado / Sentido da Pista</label>
                 <select
                   value={direction}
-                  onChange={(e) => setDirection(e.target.value as TrackDirection)}
+                  onChange={(e) => handleDirectionChange(e.target.value as TrackDirection)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none font-semibold"
                 >
                   <option value="Eixo Central">Ambos os Lados / Pista Toda (Eixo)</option>
@@ -362,26 +460,62 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({ activeContractId
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Espessura (cm)</label>
-                <input
-                  type="text"
-                  value={thicknessCm}
-                  onChange={(e) => setThicknessCm(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono focus:outline-none"
-                />
+            {/* Espessura e Largura Auto-preenchidas por Norma DNIT (Editáveis) */}
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-300 font-semibold">Espessura (cm)</label>
+                    <span className="text-[9px] text-blue-400 font-mono flex items-center space-x-0.5">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      <span>DNIT</span>
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={thicknessCm}
+                    onChange={(e) => setThicknessCm(e.target.value)}
+                    placeholder="ex: 5.0"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono focus:outline-none focus:border-blue-500 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-300 font-semibold">Largura (m)</label>
+                    <span className="text-[9px] text-blue-400 font-mono flex items-center space-x-0.5">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      <span>DNIT</span>
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={widthMeters}
+                    onChange={(e) => setWidthMeters(e.target.value)}
+                    placeholder="ex: 7.2"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono focus:outline-none focus:border-blue-500 font-bold"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Largura (m)</label>
-                <input
-                  type="text"
-                  value={widthMeters}
-                  onChange={(e) => setWidthMeters(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white font-mono focus:outline-none"
-                />
-              </div>
+              {dnitNormInfo && (
+                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-blue-950/60 border border-blue-800/60 text-[11px] text-blue-300">
+                  <div className="flex items-center space-x-1.5 min-w-0">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <span className="truncate">
+                      Preenchido por <strong>{dnitNormInfo.normCode}</strong> (Editável)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applyDnitNorms(serviceId, direction)}
+                    className="text-[10px] text-blue-400 hover:text-blue-200 underline cursor-pointer shrink-0 ml-2"
+                    title="Restaurar dimensões originais da norma DNIT"
+                  >
+                    Restaurar DNIT
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">

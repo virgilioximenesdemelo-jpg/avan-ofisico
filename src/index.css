@@ -1,16 +1,25 @@
 @import "tailwindcss";
 
+@page {
+  size: A4 landscape;
+  margin: 5mm;
+}
+
 @media print {
-  body {
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
     background-color: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
   }
 
   .no-print,
   .print\:hidden,
   nav,
+  aside,
   sidebar,
   .sidebar {
     display: none !important;
@@ -21,5 +30,32 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  #linear-pdf-export-container {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .linear-page-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    margin: 0 !important;
+    padding: 2mm !important;
+    box-sizing: border-box !important;
+  }
+
+  .linear-chunk-strip {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .estaca-flex {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
+
 

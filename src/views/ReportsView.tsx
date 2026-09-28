@@ -107,9 +107,76 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ activeContractId }) =>
     return db.generateSegmentsForContract(contract.id);
   }, [contract]);
 
+  // Serviços cadastrados estritamente para o contrato selecionado
+  const contractServices = useMemo(() => {
+    if (!contract) return [];
+    const byContract = services.filter(s => s.contractId === contract.id);
+    const executedIds = new Set<string>();
+    segments.forEach(seg => {
+      if (seg.latestServiceId) executedIds.add(seg.latestServiceId);
+      seg.executionHistory?.forEach(e => {
+        if (e.serviceId) executedIds.add(e.serviceId);
+      });
+    });
+    const combined = services.filter(s =>
+      s.contractId === contract.id || executedIds.has(s.id)
+    );
+    if (combined.length > 0) {
+      return combined.sort((a, b) => a.executiveOrder - b.executiveOrder);
+    }
+    const fallback = db.getServices(contract.id);
+    return fallback.sort((a, b) => a.executiveOrder - b.executiveOrder);
+  }, [contract, services, segments]);
+
   const chunks: LinearChunkData[] = useMemo(() => {
     if (!contract || segments.length === 0) return [];
     const totalContractSegments = segments.length;
+
+    // Se linearChunkSizeKm for -1, ajusta para caber em 1 página (ou máx 2 páginas)
+    if (linearChunkSizeKm === -1) {
+      const extension = contract.extensionKm > 0
+        ? contract.extensionKm
+        : Math.max(0.1, contract.kmFinal - contract.kmInitial);
+
+      const numFaixas = extension <= 80 ? 4 : 8;
+      const stepKm = extension / numFaixas;
+
+      const list: LinearChunkData[] = [];
+      for (let i = 0; i < numFaixas; i++) {
+        const cStart = Number((contract.kmInitial + i * stepKm).toFixed(3));
+        const cEnd = i === numFaixas - 1
+          ? contract.kmFinal
+          : Number((contract.kmInitial + (i + 1) * stepKm).toFixed(3));
+
+        const segs = segments.filter(s => {
+          if (i === numFaixas - 1) {
+            return s.km >= cStart && s.km <= cEnd + 0.001;
+          }
+          return s.km >= cStart && s.km < cEnd;
+        });
+
+        const executedCount = segs.filter(s => !!s.latestServiceColor).length;
+        const executedPercentageTotal = totalContractSegments > 0
+          ? Number(((executedCount / totalContractSegments) * 100).toFixed(2))
+          : 0;
+        const executedPercentageSub = segs.length > 0
+          ? Math.round((executedCount / segs.length) * 100)
+          : 0;
+
+        list.push({
+          index: i + 1,
+          title: `Faixa #${i + 1} — KM ${cStart.toFixed(1).replace('.', ',')} ao KM ${cEnd.toFixed(1).replace('.', ',')} (${(cEnd - cStart).toFixed(1).replace('.', ',')} km)`,
+          startKm: cStart,
+          endKm: cEnd,
+          segments: segs,
+          executedPercentageTotal,
+          executedPercentageSub,
+          executedCount
+        });
+      }
+      return list;
+    }
+
     const startKm = contract.kmInitial;
     const endKm = contract.kmFinal;
     const list: LinearChunkData[] = [];
@@ -235,6 +302,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ activeContractId }) =>
           logging: false,
           windowWidth: 1440,
           width: 1440,
+          scrollX: 0,
+          scrollY: 0,
           onclone: (clonedDoc: Document, clonedEl: HTMLElement) => {
             (clonedEl.style as any).webkitFontSmoothing = 'antialiased';
             (clonedEl.style as any).textRendering = 'optimizeLegibility';
@@ -1576,6 +1645,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ activeContractId }) =>
                   }}
                   className="bg-slate-800 text-purple-300 font-bold text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
+                  <option value={-1}>Caber Contrato em 1 Página (máx. 2 págs)</option>
                   <option value={12}>12 km / faixa (Padrão 4 Faixas = 48 km/pág)</option>
                   <option value={10}>10 km / faixa (4 Faixas = 40 km/pág)</option>
                   <option value={8}>8 km / faixa (4 Faixas = 32 km/pág)</option>
@@ -1632,7 +1702,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ activeContractId }) =>
                   pageNumber={activeLinearPage}
                   totalPages={paginatedChunks.length}
                   chunks={paginatedChunks[activeLinearPage - 1]}
-                  services={services}
+                  services={contractServices}
                   isPavedContract={isPavedContract}
                   getFaixaDominioLeColor={getFaixaDominioLeColor}
                   getFaixaDominioLdColor={getFaixaDominioLdColor}
@@ -1671,7 +1741,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ activeContractId }) =>
               pageNumber={pageIdx + 1}
               totalPages={paginatedChunks.length}
               chunks={pageChunks}
-              services={services}
+              services={contractServices}
               isPavedContract={isPavedContract}
               getFaixaDominioLeColor={getFaixaDominioLeColor}
               getFaixaDominioLdColor={getFaixaDominioLdColor}

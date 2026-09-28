@@ -59,6 +59,7 @@ export function cleanClonedDocForPdfExport(clonedDoc: Document, clonedEl?: HTMLE
     clonedEl.style.height = '1018px';
     clonedEl.style.maxHeight = '1018px';
     clonedEl.style.minHeight = '1018px';
+    clonedEl.style.overflow = 'visible';
     clonedEl.style.margin = '0px';
     clonedEl.style.padding = '0px';
     clonedEl.style.boxSizing = 'border-box';

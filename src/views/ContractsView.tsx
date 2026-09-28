@@ -16,7 +16,8 @@ import {
   Clock,
   Search,
   X,
-  Building
+  Building,
+  AlertTriangle
 } from 'lucide-react';
 
 interface ContractsViewProps {
@@ -29,6 +30,8 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ onRefresh }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Form State
@@ -141,9 +144,26 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ onRefresh }) => {
   };
 
   const handleDelete = (id: string) => {
-    db.deleteContract(id);
-    if (isModalOpen) setIsModalOpen(false);
-    onRefresh();
+    const contract = contracts.find(c => c.id === id) || (editingContract?.id === id ? editingContract : null);
+    if (contract) {
+      setContractToDelete(contract);
+    } else {
+      db.deleteContract(id);
+      if (isModalOpen) setIsModalOpen(false);
+      onRefresh();
+    }
+  };
+
+  const confirmDelete = () => {
+    if (contractToDelete) {
+      const num = contractToDelete.number;
+      db.deleteContract(contractToDelete.id);
+      setContractToDelete(null);
+      if (isModalOpen) setIsModalOpen(false);
+      setFeedbackMessage(`Contrato ${num} removido com sucesso.`);
+      setTimeout(() => setFeedbackMessage(''), 4000);
+      onRefresh();
+    }
   };
 
   const filteredContracts = contracts.filter(c => {
@@ -173,13 +193,26 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ onRefresh }) => {
         {currentUser.role === 'admin' && (
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 bg-[#580766] hover:bg-[#43054f] text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center space-x-2"
+            className="px-4 py-2 bg-[#580766] hover:bg-[#43054f] text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center space-x-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Novo Contrato</span>
           </button>
         )}
       </div>
+
+      {/* Feedback Banner */}
+      {feedbackMessage && (
+        <div className="bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 px-4 py-3 rounded-2xl text-xs flex items-center justify-between shadow-lg shadow-emerald-950/40">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-bold">{feedbackMessage}</span>
+          </div>
+          <button onClick={() => setFeedbackMessage('')} className="text-emerald-400 hover:text-white cursor-pointer p-1">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Barra de Pesquisa */}
       <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
@@ -264,7 +297,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ onRefresh }) => {
                   </button>
                   <button
                     onClick={() => handleDelete(c.id)}
-                    className="p-1.5 bg-slate-800 hover:bg-red-950 text-slate-300 hover:text-red-400 rounded-lg border border-slate-700 transition"
+                    className="p-1.5 bg-slate-800 hover:bg-red-950 text-slate-300 hover:text-red-400 rounded-lg border border-slate-700 transition cursor-pointer active:scale-95"
                     title="Excluir Contrato"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -475,6 +508,51 @@ export const ContractsView: React.FC<ContractsViewProps> = ({ onRefresh }) => {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal de Confirmação de Exclusão de Contrato */}
+      {contractToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-red-500/40 rounded-2xl shadow-2xl max-w-md w-full p-6 text-slate-100 space-y-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-white text-base">Excluir Contrato DNIT?</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Confirma a exclusão deste contrato e de todos os lançamentos associados:
+                </p>
+                <div className="mt-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <div className="font-mono text-xs font-bold text-purple-400">{contractToDelete.number}</div>
+                  <div className="text-sm font-bold text-white">{contractToDelete.highway} • {contractToDelete.lot}</div>
+                  <div className="text-xs text-slate-400">{contractToDelete.executingCompany}</div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/60">
+              Esta ação removerá o contrato do SCLAF.
+            </p>
+
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setContractToDelete(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-red-900/40 flex items-center space-x-1.5 cursor-pointer active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Sim, Excluir Contrato</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

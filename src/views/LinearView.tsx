@@ -7,6 +7,7 @@ import { db } from '../services/db';
 import { Contract, Segment20m, RoadService, ExecutionRecord } from '../types';
 import { SegmentDetailModal } from '../components/SegmentDetailModal';
 import { MatupiriLogo } from '../components/MatupiriLogo';
+import { DnitLogo } from '../components/DnitLogo';
 import { LinearReportSheet, LinearChunkData } from '../components/LinearReportSheet';
 import { cleanClonedDocForPdfExport, installCanvasPatternSafeguard } from '../services/pdfExport';
 import jsPDF from 'jspdf';
@@ -83,9 +84,38 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
   // Modo de Exibição das Legendas ('AUTO' | 'PAV' | 'NPAV' | 'SEPARADO')
   const [legendFilterMode, setLegendFilterMode] = useState<'AUTO' | 'PAV' | 'NPAV' | 'SEPARADO'>('SEPARADO');
 
-  // Serviços Filtrados por Tipo de Superfície
+  // Serviços cadastrados estritamente para o contrato selecionado (ou executados nele)
+  const contractServices = useMemo(() => {
+    if (!activeContract) return [];
+
+    // 1. Serviços cadastrados explicitamente com o ID do contrato selecionado
+    const byContract = services.filter(s => s.contractId === activeContract.id);
+
+    // 2. Serviços que foram efetivamente executados nas estacas deste contrato
+    const executedIds = new Set<string>();
+    segments.forEach(seg => {
+      if (seg.latestServiceId) executedIds.add(seg.latestServiceId);
+      seg.executionHistory.forEach(e => {
+        if (e.serviceId) executedIds.add(e.serviceId);
+      });
+    });
+
+    const combined = services.filter(s => 
+      s.contractId === activeContract.id || executedIds.has(s.id)
+    );
+
+    if (combined.length > 0) {
+      return combined.sort((a, b) => a.executiveOrder - b.executiveOrder);
+    }
+
+    // Se o contrato ainda não possuir serviços específicos, utiliza os serviços do catálogo associados
+    const fallback = db.getServices(activeContract.id);
+    return fallback.sort((a, b) => a.executiveOrder - b.executiveOrder);
+  }, [activeContract, services, segments]);
+
+  // Serviços do Contrato Filtrados por Tipo de Superfície
   const pavedServices = useMemo(() => {
-    return services.filter(s => {
+    return contractServices.filter(s => {
       const st = s.surfaceType as string | undefined;
       if (st === 'Pavimentado' || st === 'PAV' || st === 'Ambos') return true;
       if (st === 'Não Pavimentado' || st === 'NPAV') return false;
@@ -105,10 +135,10 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
         !st
       );
     });
-  }, [services]);
+  }, [contractServices]);
 
   const unpavedServices = useMemo(() => {
-    return services.filter(s => {
+    return contractServices.filter(s => {
       const st = s.surfaceType as string | undefined;
       if (st === 'Não Pavimentado' || st === 'NPAV' || st === 'Ambos') return true;
       if (st === 'Pavimentado' || st === 'PAV') return false;
@@ -127,7 +157,7 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
         s.category === 'Terraplenagem'
       );
     });
-  }, [services]);
+  }, [contractServices]);
 
   // Helper: Identifica se um serviço pertence estritamente à Faixa de Domínio (Limpeza, Roçada, Drenagem, Conservação)
   const isFaixaDeDominioService = (s: { category?: string; name: string } | undefined): boolean => {
@@ -308,11 +338,71 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
     window.print();
   };
 
+  // Lógica de Paginação Inteligente para PDF: Verifica a extensão total do contrato
+  // e ajusta a escala e divisão para renderizar todos os quilômetros em NO MÁXIMO 2 PÁGINAS (4 faixas por folha)
+  const pdfPaginatedChunks = useMemo(() => {
+    if (!activeContract || segments.length === 0) return [];
+    
+    const extension = activeContract.extensionKm > 0
+      ? activeContract.extensionKm
+      : Math.max(0.1, activeContract.kmFinal - activeContract.kmInitial);
+
+    // Se extensão <= 40 km, cabe em 1 página inteira (até 4 faixas).
+    // Se extensão > 40 km, distribui em 8 faixas (exatamente 2 páginas, 4 faixas por folha).
+    const numFaixas = extension <= 40 ? Math.min(4, Math.max(1, Math.ceil(extension / 10))) : 8;
+    const stepKm = extension / numFaixas;
+
+    const list: LinearChunkData[] = [];
+    for (let i = 0; i < numFaixas; i++) {
+      const cStart = Number((activeContract.kmInitial + i * stepKm).toFixed(3));
+      const cEnd = i === numFaixas - 1
+        ? activeContract.kmFinal
+        : Number((activeContract.kmInitial + (i + 1) * stepKm).toFixed(3));
+
+      const segs = segments.filter(s => {
+        if (i === numFaixas - 1) {
+          return s.km >= cStart && s.km <= cEnd + 0.001;
+        }
+        return s.km >= cStart && s.km < cEnd;
+      });
+
+      const executedCount = segs.filter(s => !!s.latestServiceColor).length;
+      const executedPercentageTotal = segments.length > 0
+        ? Number(((executedCount / segments.length) * 100).toFixed(2))
+        : 0;
+      const executedPercentageSub = segs.length > 0
+        ? Math.round((executedCount / segs.length) * 100)
+        : 0;
+
+      list.push({
+        index: i + 1,
+        title: `Faixa #${i + 1} — KM ${cStart.toFixed(1).replace('.', ',')} ao KM ${cEnd.toFixed(1).replace('.', ',')} (${(cEnd - cStart).toFixed(1).replace('.', ',')} km)`,
+        startKm: cStart,
+        endKm: cEnd,
+        segments: segs,
+        executedPercentageTotal,
+        executedPercentageSub,
+        executedCount
+      });
+    }
+
+    const pages: LinearChunkData[][] = [];
+    for (let i = 0; i < list.length; i += 4) {
+      pages.push(list.slice(i, i + 4));
+    }
+    return pages;
+  }, [activeContract, segments]);
+
   // Agrupar estacas/segmentos em sub-trechos de 12 km (ou tamanho configurável)
   const chunks: LinearChunkData[] = useMemo(() => {
     if (!activeContract || segments.length === 0) return [];
 
     const totalContractSegments = segments.length;
+
+    // Se chunkSizeKm for -1, ajusta o contrato para caber em 1 página (ou no máximo 2 páginas)
+    if (chunkSizeKm === -1) {
+      return pdfPaginatedChunks.flat();
+    }
 
     if (chunkSizeKm === 0) {
       const execCount = segments.filter(s => !!s.latestServiceColor).length;
@@ -374,7 +464,7 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
     }
 
     return list;
-  }, [activeContract, segments, chunkSizeKm]);
+  }, [activeContract, segments, chunkSizeKm, pdfPaginatedChunks]);
 
   // Agrupar sub-trechos em páginas de exatamente 4 faixas fixas por página
   const paginatedChunks = useMemo(() => {
@@ -392,9 +482,9 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
     return chunks.filter(c => c.index === idx);
   }, [chunks, selectedChunkIndex]);
 
-  // Exportação em PDF do Diagrama Linear (4 Faixas Fixas por Página)
+  // Exportação em PDF do Diagrama Linear (Ajustado para no máximo 2 páginas)
   const handleExportPdf = async () => {
-    if (!activeContract || paginatedChunks.length === 0) {
+    if (!activeContract || pdfPaginatedChunks.length === 0) {
       alert('Nenhum dado linear disponível para exportação.');
       return;
     }
@@ -412,13 +502,13 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
         format: 'a4'
       });
 
-      const totalPages = paginatedChunks.length;
+      const totalPages = pdfPaginatedChunks.length;
       const pdfWidth = 297; // mm A4 Landscape (largura total)
       const pdfHeight = 210; // mm A4 Landscape (altura total)
 
       for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
         setActiveExportPageIdx(pageIdx);
-        setExportProgress(`Renderizando folha ${pageIdx + 1} de ${totalPages} (4 faixas por página)...`);
+        setExportProgress(`Renderizando folha ${pageIdx + 1} de ${totalPages} (ajustada para até 2 folhas)...`);
         
         // Aguarda a montagem e layout do componente ativo
         await new Promise((resolve) => setTimeout(resolve, 250));
@@ -439,6 +529,8 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
           logging: false,
           windowWidth: 1440,
           width: 1440,
+          scrollX: 0,
+          scrollY: 0,
           onclone: (clonedDoc: Document, clonedEl: HTMLElement) => {
             (clonedEl.style as any).webkitFontSmoothing = 'antialiased';
             (clonedEl.style as any).textRendering = 'optimizeLegibility';
@@ -560,7 +652,9 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
               onChange={(e) => setSelectedChunkIndex(e.target.value)}
               className="bg-white text-purple-900 text-xs font-mono rounded px-2 py-1 border border-slate-300 focus:outline-none font-bold"
             >
-              <option value="ALL">Todos os Sub-trechos ({chunkSizeKm > 0 ? `${chunkSizeKm} km` : ''})</option>
+              <option value="ALL">
+                Todos os Sub-trechos {chunkSizeKm === -1 ? '(Ajustado à Página)' : chunkSizeKm > 0 ? `(${chunkSizeKm} km)` : ''}
+              </option>
               {chunks.map(chk => (
                 <option key={`chk-opt-${chk.index}`} value={chk.index.toString()}>
                   Sub-trecho #{chk.index} (KM {chk.startKm.toFixed(1)} ao {chk.endKm.toFixed(1)})
@@ -569,7 +663,7 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
             </select>
           </div>
 
-          {/* Seleção do Tamanho do Sub-trecho (Apenas 10km, 5km e 2km - Padrão 2km) */}
+          {/* Seleção do Tamanho do Sub-trecho (com opção de caber em 1 página / máx. 2) */}
           <div className="flex items-center space-x-2 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-300">
             <span className="text-xs font-semibold text-slate-700">Divisão:</span>
             <select
@@ -580,6 +674,7 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
               }}
               className="bg-white text-emerald-800 text-xs font-mono rounded px-2 py-1 border border-slate-300 focus:outline-none font-bold"
             >
+              <option value={-1}>Caber Contrato em 1 Página (máx. 2 págs)</option>
               <option value={10}>10 km por segmento</option>
               <option value={5}>5 km por segmento</option>
               <option value={2}>2 km por segmento (Padrão)</option>
@@ -672,11 +767,12 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
               </p>
             </div>
 
-            <div className="hidden lg:flex items-center space-x-2 text-right">
-              <div className="bg-purple-950/80 px-3 py-1.5 rounded-lg border border-purple-800 text-[10px] text-purple-200">
+            <div className="flex items-center space-x-2.5 text-right">
+              <div className="hidden lg:block bg-purple-950/80 px-3 py-1.5 rounded-lg border border-purple-800 text-[10px] text-purple-200 text-center">
                 <span className="font-bold block text-white">CONSORCIO MATUPIRI</span>
                 <span className="text-[9px] text-purple-300">SUPERVISÃO E FISCALIZAÇÃO</span>
               </div>
+              <DnitLogo className="h-9 sm:h-11 w-auto shadow-sm" />
             </div>
           </div>
 
@@ -686,7 +782,7 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
               <div className="flex items-center space-x-2">
                 {/* Badge do Título de Legendas (ROXO SELECIONADO) */}
                 <div className="px-3 py-1 rounded text-[11px] font-black text-white tracking-wide uppercase border border-purple-900 shrink-0 shadow-xs" style={{ color: '#ffffff', backgroundColor: '#3b0764' }}>
-                  SERVIÇOS E LEGENDAS DO DIAGRAMA
+                  LEGENDAS:
                 </div>
               </div>
 
@@ -1187,30 +1283,30 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
               <span>Exportando Diagrama Linear</span>
             </div>
             <p className="text-xs text-slate-600 font-medium">
-              {exportProgress || `Renderizando folha ${activeExportPageIdx + 1} de ${paginatedChunks.length}...`}
+              {exportProgress || `Renderizando folha ${activeExportPageIdx + 1} de ${pdfPaginatedChunks.length}...`}
             </p>
             {/* Barra de Progresso */}
             <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <div 
                 className="bg-purple-700 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${Math.round(((activeExportPageIdx + 1) / paginatedChunks.length) * 100)}%` }}
+                style={{ width: `${Math.round(((activeExportPageIdx + 1) / pdfPaginatedChunks.length) * 100)}%` }}
               />
             </div>
             <div className="text-[11px] font-mono font-bold text-purple-900">
-              Folha {activeExportPageIdx + 1} de {paginatedChunks.length} ({Math.round(((activeExportPageIdx + 1) / paginatedChunks.length) * 100)}%)
+              Folha {activeExportPageIdx + 1} de {pdfPaginatedChunks.length} ({Math.round(((activeExportPageIdx + 1) / pdfPaginatedChunks.length) * 100)}%)
             </div>
           </div>
 
           {/* Palco de Renderização Ativa 100% Visível para Captura Exata do html2canvas */}
-          <div className="w-[1440px] max-w-[1440px] bg-white rounded-none shadow-2xl p-0 my-2 border border-slate-300 overflow-hidden">
-            <div id="linear-active-export-sheet" className="w-[1440px] h-[1018px] bg-white p-0 m-0 overflow-hidden">
+          <div className="w-[1440px] max-w-[1440px] bg-white rounded-none shadow-2xl p-0 my-2 border-0">
+            <div id="linear-active-export-sheet" className="w-[1440px] min-h-[1018px] max-h-[1018px] bg-white p-0 m-0 overflow-visible" style={{ width: '1440px', minHeight: '1018px', maxHeight: '1018px', boxSizing: 'border-box' }}>
               <LinearReportSheet
                 id={`active-sheet-${activeExportPageIdx}`}
                 contract={activeContract}
                 pageNumber={activeExportPageIdx + 1}
-                totalPages={paginatedChunks.length}
-                chunks={paginatedChunks[activeExportPageIdx]}
-                services={services}
+                totalPages={pdfPaginatedChunks.length}
+                chunks={pdfPaginatedChunks[activeExportPageIdx]}
+                services={contractServices}
                 isPavedContract={isPavedContract}
                 getFaixaDominioLeColor={getFaixaDominioLeColor}
                 getFaixaDominioLdColor={getFaixaDominioLdColor}
@@ -1234,15 +1330,15 @@ export const LinearView: React.FC<LinearViewProps> = ({ activeContractId }) => {
         className="hidden print:block print:w-full select-none"
         aria-hidden="true"
       >
-        {paginatedChunks.map((pageChunks, pageIdx) => (
+        {pdfPaginatedChunks.map((pageChunks, pageIdx) => (
           <div key={`linear-export-sheet-wrapper-${pageIdx}`} className="break-after-page print:break-after-page mb-8 print:mb-0">
             <LinearReportSheet
               id={`linear-export-sheet-${pageIdx}`}
               contract={activeContract}
               pageNumber={pageIdx + 1}
-              totalPages={paginatedChunks.length}
+              totalPages={pdfPaginatedChunks.length}
               chunks={pageChunks}
-              services={services}
+              services={contractServices}
               isPavedContract={isPavedContract}
               getFaixaDominioLeColor={getFaixaDominioLeColor}
               getFaixaDominioLdColor={getFaixaDominioLdColor}

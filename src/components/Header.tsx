@@ -86,11 +86,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Logo da Empresa / Consórcio */}
           {settings.companyLogoUrl ? (
-            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-slate-700">
-              {settings.companyLogoUrl === DEFAULT_MATUPIRI_LOGO || settings.companyLogoUrl.includes('Matupiri') ? (
-                <MatupiriLogo className="h-10 sm:h-12 w-auto" />
+            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-slate-700 shrink-0">
+              {settings.companyLogoUrl === DEFAULT_MATUPIRI_LOGO || (!settings.companyLogoUrl.startsWith('data:image/png') && !settings.companyLogoUrl.startsWith('data:image/jpeg') && !settings.companyLogoUrl.startsWith('http') && settings.companyLogoUrl.includes('Matupiri')) ? (
+                <MatupiriLogo className="h-10 sm:h-12 w-auto shrink-0" />
               ) : (
-                <div className="bg-white p-1 rounded-xl border border-slate-700 shadow-md flex items-center justify-center max-h-14">
+                <div className="bg-white p-1 rounded-xl border border-slate-700 shadow-md flex items-center justify-center max-h-14 shrink-0">
                   <img
                     src={settings.companyLogoUrl}
                     alt={settings.companyName}
@@ -100,8 +100,8 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-slate-700">
-              <MatupiriLogo className="h-10 sm:h-12 w-auto" />
+            <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-slate-700 shrink-0">
+              <MatupiriLogo className="h-10 sm:h-12 w-auto shrink-0" />
             </div>
           )}
 

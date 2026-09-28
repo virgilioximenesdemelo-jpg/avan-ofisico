@@ -63,7 +63,7 @@ export function sanitizeForFirestore<T>(data: T): T {
   return data;
 }
 
-export const DEFAULT_MATUPIRI_LOGO = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgMjAwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjIwMCI+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmZmZmZmYiIHJ4PSIxMiIvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI0LCAxNikiPjx0ZXh0IHg9IjYiIHk9IjM4IiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjMwIiBmaWxsPSIjNTgwNzY2IiBsZXR0ZXItc3BhY2luZz0iMyI+Q09OU8OTUkNJTzwvdGV4dD48dGV4dCB4PSIyIiB5PSIxMTgiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtc2l6ZT0iODgiIGZpbGw9IiM1ODA3NjYiIGxldHRlci1zcGFjaW5nPSItMiI+TWF0dXBpcmk8L3RleHQ+PGxpbmUgeDE9IjQiIHkxPSIxMzgiIHgyPSI1NDYiIHkyPSIxMzgiIHN0cm9rZT0iIzU4MDc2NiIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjEyIiB5MT0iMTM4IiB4Mj0iNTM4IiB5Mj0iMTM4IiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWRhc2hhcnJheT0iMTIgMTAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjx0ZXh0IHg9IjYiIHk9IjE2OCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSwgLWFwcGxlLXN5c3RlbSwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjgwMCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzU4MDc2NiIgbGV0dGVyLXNwYWNpbmc9IjEiPk1PREVSQSBFTkdFTkhBUklBIOKAoiBTQ0IgQklNICZhbXA7IEdJUzwvdGV4dD48L2c+PC9zdmc+`;
+export const DEFAULT_MATUPIRI_LOGO = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjAgMzQwIiB3aWR0aD0iNzIwIiBoZWlnaHQ9IjM0MCI+CiAgPHJlY3Qgd2lkdGg9IjcyMCIgaGVpZ2h0PSIzNDAiIGZpbGw9IiNmZmZmZmYiIHJ4PSIxOCIvPgogIDxnIGZpbGw9IiM0YzA2NjMiIGZvbnQtZmFtaWx5PSInT3V0Zml0JywgJ01vbnRzZXJyYXQnLCAnQ2VudHVyeSBHb3RoaWMnLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjM0Ij4KICAgIDx0ZXh0IHg9IjQ2LjAiIHk9IjEwOC4wIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjMuMCwgNDYuMCwgMTA4LjApIj5DPC90ZXh0PgogICAgPHRleHQgeD0iNzAuMCIgeT0iOTcuMCIgdHJhbnNmb3JtPSJyb3RhdGUoLTE3LjAsIDcwLjAsIDk3LjApIj5PPC90ZXh0PgogICAgPHRleHQgeD0iOTUuMCIgeT0iODguMCIgdHJhbnNmb3JtPSJyb3RhdGUoLTExLjUsIDk1LjAsIDg4LjApIj5OPC90ZXh0PgogICAgPHRleHQgeD0iMTIwLjAiIHk9IjgyLjAiIHRyYW5zZm9ybT0icm90YXRlKC02LjAsIDEyMC4wLCA4Mi4wKSI+UzwvdGV4dD4KICAgIDx0ZXh0IHg9IjE0NC4wIiB5PSI3OS4wIiB0cmFuc2Zvcm09InJvdGF0ZSgwLjUsIDE0NC4wLCA3OS4wKSI+w5M8L3RleHQ+CiAgICA8dGV4dCB4PSIxNjkuMCIgeT0iODAuNSIgdHJhbnNmb3JtPSJyb3RhdGUoNy4wLCAxNjkuMCwgODAuNSkiPlI8L3RleHQ+CiAgICA8dGV4dCB4PSIxOTMuMCIgeT0iODUuNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTMuMCwgMTkzLjAsIDg1LjUpIj5DPC90ZXh0PgogICAgPHRleHQgeD0iMjE0LjAiIHk9IjkyLjAiIHRyYW5zZm9ybT0icm90YXRlKDE4LjAsIDIxNC4wLCA5Mi4wKSI+STwvdGV4dD4KICAgIDx0ZXh0IHg9IjIzMy4wIiB5PSI5OS4wIiB0cmFuc2Zvcm09InJvdGF0ZSgyMy41LCAyMzMuMCwgOTkuMCkiPk88L3RleHQ+CiAgPC9nPgogIDx0ZXh0IHg9IjM0IiB5PSIyMzQiIGZpbGw9IiM0YzA2NjMiIGZvbnQtZmFtaWx5PSInT3V0Zml0JywgJ01vbnRzZXJyYXQnLCAnQ2VudHVyeSBHb3RoaWMnLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjE3MCIgbGV0dGVyLXNwYWNpbmc9Ii0yLjUiPk1hdHVwaXJpPC90ZXh0PgogIDxyZWN0IHg9IjM0IiB5PSIyNTQiIHdpZHRoPSI2NTIiIGhlaWdodD0iMzIiIHJ4PSIxNiIgZmlsbD0iIzRjMDY2MyIvPgogIDxsaW5lIHgxPSI1MiIgeTE9IjI3MCIgeDI9IjY2OCIgeTI9IjI3MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjUuNSIgc3Ryb2tlLWRhc2hhcnJheT0iMjAgMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDx0ZXh0IHg9IjM2MCIgeT0iMzIyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNGMwNjYzIiBmb250LWZhbWlseT0iJ091dGZpdCcsICdNb250c2VycmF0JywgJ0NlbnR1cnkgR290aGljJywgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjgwMCIgZm9udC1zaXplPSIyNiIgbGV0dGVyLXNwYWNpbmc9IjIuOCI+TU9ERVJBIEVOR0VOSEFSSUEg4oCiIFNDQiBCSU0gJmFtcDsgR0lTPC90ZXh0Pgo8L3N2Zz4=`;
 
 export const INITIAL_FICHAS: FichaDeCampoRecord[] = [
   {
@@ -410,19 +410,27 @@ class DatabaseEngine {
       this.contracts = storedContracts ? JSON.parse(storedContracts) : INITIAL_CONTRACTS;
 
       const storedServices = localStorage.getItem(STORAGE_KEY_PREFIX + 'services');
+      const storedDeleted = localStorage.getItem(STORAGE_KEY_PREFIX + 'deleted_services');
+      const deletedIds: string[] = storedDeleted ? JSON.parse(storedDeleted) : [];
+
       if (storedServices) {
         const parsed: RoadService[] = JSON.parse(storedServices);
         INITIAL_SERVICES.forEach(initSrv => {
+          if (deletedIds.includes(initSrv.id)) return; // Não restaura serviços que o usuário excluiu
           const idx = parsed.findIndex(s => s.id === initSrv.id);
           if (idx === -1) {
             parsed.push(initSrv);
-          } else if (!parsed[idx].surfaceType) {
-            parsed[idx].surfaceType = initSrv.surfaceType;
+          } else {
+            if (!parsed[idx].surfaceType) parsed[idx].surfaceType = initSrv.surfaceType;
+            if (!parsed[idx].contractId) parsed[idx].contractId = initSrv.contractId;
+            if (!parsed[idx].dnitStandard) parsed[idx].dnitStandard = initSrv.dnitStandard;
+            if (parsed[idx].defaultThicknessCm === undefined) parsed[idx].defaultThicknessCm = initSrv.defaultThicknessCm;
+            if (parsed[idx].defaultWidthMeters === undefined) parsed[idx].defaultWidthMeters = initSrv.defaultWidthMeters;
           }
         });
-        this.services = parsed;
+        this.services = parsed.filter(s => !deletedIds.includes(s.id));
       } else {
-        this.services = INITIAL_SERVICES;
+        this.services = INITIAL_SERVICES.filter(s => !deletedIds.includes(s.id));
       }
 
       const storedExecutions = localStorage.getItem(STORAGE_KEY_PREFIX + 'executions');
@@ -613,8 +621,18 @@ class DatabaseEngine {
   }
 
   // --- SERVIÇOS ---
-  public getServices(): RoadService[] {
-    return [...this.services].sort((a, b) => a.executiveOrder - b.executiveOrder);
+  public getServices(contractId?: string): RoadService[] {
+    let list = [...this.services];
+    if (contractId && contractId !== 'ALL') {
+      list = list.filter(s => !s.contractId || s.contractId === 'ALL' || s.contractId === contractId);
+    }
+    return list.sort((a, b) => a.executiveOrder - b.executiveOrder);
+  }
+
+  public getServicesByContract(contractId: string): RoadService[] {
+    return this.services
+      .filter(s => s.contractId === contractId)
+      .sort((a, b) => a.executiveOrder - b.executiveOrder);
   }
 
   public async addService(service: Omit<RoadService, 'id'>): Promise<RoadService> {
@@ -661,6 +679,18 @@ class DatabaseEngine {
     const service = this.services.find(s => s.id === id);
     if (service) {
       this.services = this.services.filter(s => s.id !== id);
+
+      try {
+        const storedDeleted = localStorage.getItem(STORAGE_KEY_PREFIX + 'deleted_services');
+        const deletedIds: string[] = storedDeleted ? JSON.parse(storedDeleted) : [];
+        if (!deletedIds.includes(id)) {
+          deletedIds.push(id);
+          localStorage.setItem(STORAGE_KEY_PREFIX + 'deleted_services', JSON.stringify(deletedIds));
+        }
+      } catch (e) {
+        console.error('SCLAF: Erro ao registrar exclusão de serviço:', e);
+      }
+
       this.logAction('EXCLUSÃO', 'Serviços', `Serviço removido: ${service.name}.`);
       this.saveToLocalStorage();
       this.notifyListeners();

@@ -18,7 +18,9 @@ import {
   Palette,
   RefreshCw,
   Cloud,
-  CloudUpload
+  CloudUpload,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -35,6 +37,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor || '#580766');
   const [savedMsg, setSavedMsg] = useState('');
   const [isPushingCloud, setIsPushingCloud] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,11 +95,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
   };
 
   const handleReset = async () => {
-    if (confirm('Atenção: Esta ação restaurará todos os contratos e dados do SCLAF para o padrão inicial do DNIT e sincronizará com a nuvem. Confirmar?')) {
-      await db.resetToFactoryDefault();
-      onRefresh();
-      alert('Dados restaurados para o padrão de fábrica e sincronizados.');
-    }
+    await db.resetToFactoryDefault();
+    setShowResetModal(false);
+    onRefresh();
+    setSavedMsg('Dados restaurados com sucesso para o padrão de fábrica do DNIT e sincronizados.');
+    setTimeout(() => setSavedMsg(''), 5000);
   };
 
   return (
@@ -258,8 +261,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
 
             {currentUser.role === 'admin' && (
               <button
-                onClick={handleReset}
-                className="w-full bg-slate-800 hover:bg-red-950 text-slate-300 hover:text-red-400 font-bold py-2 px-3 rounded-xl text-xs border border-slate-700 transition flex items-center justify-center space-x-2 mt-2"
+                type="button"
+                onClick={() => setShowResetModal(true)}
+                className="w-full bg-slate-800 hover:bg-red-950 text-slate-300 hover:text-red-400 font-bold py-2 px-3 rounded-xl text-xs border border-slate-700 transition flex items-center justify-center space-x-2 mt-2 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Restaurar Dados Padrão DNIT</span>
@@ -312,6 +316,43 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Confirmação para Restauração Padrão */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl shadow-2xl max-w-md w-full p-6 text-slate-100 space-y-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-3 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0">
+                <AlertTriangle className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-base">Restaurar Dados Padrão DNIT?</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Esta ação restaurará os contratos, serviços e registros do SCLAF para o catálogo inicial regulamentar do DNIT.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-amber-900/40 flex items-center space-x-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Confirmar Restauração</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

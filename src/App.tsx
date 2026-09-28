@@ -53,7 +53,7 @@ export default function App() {
       case 'contratos':
         return <ContractsView onRefresh={handleRefresh} />;
       case 'servicos':
-        return <ServicesView onRefresh={handleRefresh} />;
+        return <ServicesView activeContractId={activeContractId} onRefresh={handleRefresh} />;
       case 'mapa':
         return <MapView activeContractId={activeContractId} />;
       case 'relatorios':
