@@ -305,13 +305,13 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#e2e8f0', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1 py-0.5 flex items-center justify-center text-center font-bold text-[8px] text-white uppercase font-mono h-[16px]"
+                    className="shrink-0 border-r border-slate-600 px-1 py-0.5 flex items-center justify-center text-center font-bold text-[8px] text-white uppercase font-mono h-[18px]"
                     style={{ backgroundColor: '#1e1b4b', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
                     CONTRATADA / EMPRESA
                   </div>
                   <div
-                    className="flex-1 min-w-0 px-2 py-0.5 font-bold text-[8.5px] uppercase tracking-wide flex items-center justify-center text-center overflow-hidden h-[16px]"
+                    className="flex-1 min-w-0 px-2 py-0.5 font-bold text-[8.5px] uppercase tracking-wide flex items-center justify-center text-center overflow-hidden h-[18px]"
                     style={{ backgroundColor: '#f8fafc', color: '#0f172a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', boxSizing: 'border-box' }}
                   >
                     <span className="truncate">CONTRATO {contract?.number} — {contract?.executingCompany || 'EMPRESA CONTRATADA'}</span>
@@ -324,20 +324,20 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[16px]"
+                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[22px]"
                     style={{ backgroundColor: '#1e1b4b', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
-                    <span className="font-extrabold text-[8px] tracking-tight uppercase truncate">LE FAIXA DE DOMÍNIO</span>
-                    <span className="text-[6px] font-semibold leading-none text-emerald-300">Roçada Manual • Drenagem • Limpeza</span>
+                    <span className="font-extrabold text-[8.5px] leading-tight tracking-tight uppercase whitespace-nowrap">LE FAIXA DE DOMÍNIO</span>
+                    <span className="text-[6.5px] font-semibold leading-tight text-emerald-300 whitespace-nowrap">Roçada Manual • Drenagem • Limpeza</span>
                   </div>
                   <div
-                    className="flex flex-1 min-w-0 overflow-hidden h-[16px]"
+                    className="flex flex-1 min-w-0 overflow-hidden h-[22px]"
                     style={{ backgroundColor: '#fef08a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', minWidth: 0, boxSizing: 'border-box' }}
                   >
                     {chunk.segments.map((seg) => (
                       <div
                         key={`r-f1-${seg.id}`}
-                        className="estaca-item shrink-0 h-[16px] border-r"
+                        className="estaca-item shrink-0 h-[22px] border-r"
                         style={{
                           backgroundColor: getFaixaDominioLeColor(seg) || '#fef08a',
                           width: segWidthPct,
@@ -358,22 +358,22 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[16px]"
+                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[22px]"
                     style={{ backgroundColor: '#1e1b4b', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
-                    <span className="font-extrabold text-[8px] tracking-tight uppercase truncate">LE ACOSTAMENTO</span>
-                    <span className="text-[6px] font-semibold leading-none text-amber-300">
+                    <span className="font-extrabold text-[8.5px] leading-tight tracking-tight uppercase whitespace-nowrap">LE ACOSTAMENTO</span>
+                    <span className="text-[6.5px] font-semibold leading-tight text-amber-300 whitespace-nowrap">
                       {isPavedContract ? 'Sub-base BGS • Imprimação • Pintura' : 'Conformação • Regularização'}
                     </span>
                   </div>
                   <div
-                    className="flex flex-1 min-w-0 overflow-hidden h-[16px]"
+                    className="flex flex-1 min-w-0 overflow-hidden h-[22px]"
                     style={{ backgroundColor: '#fef08a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', minWidth: 0, boxSizing: 'border-box' }}
                   >
                     {chunk.segments.map((seg) => (
                       <div
                         key={`r-f2-${seg.id}`}
-                        className="estaca-item shrink-0 h-[16px] border-r"
+                        className="estaca-item shrink-0 h-[22px] border-r"
                         style={{
                           backgroundColor: getAcostamentoLeColor(seg) || '#fef08a',
                           width: segWidthPct,
@@ -394,21 +394,21 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[18px]"
+                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[24px]"
                     style={{ backgroundColor: '#312e81', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
-                    <span className="font-extrabold text-[8.5px] tracking-tight uppercase" style={{ color: '#fde047' }}>EIXO DA PISTA</span>
-                    <span className="text-[6px] font-semibold leading-none text-purple-200">CBUQ • Capa Asfáltica</span>
+                    <span className="font-extrabold text-[9px] leading-tight tracking-tight uppercase whitespace-nowrap" style={{ color: '#fde047' }}>EIXO DA PISTA</span>
+                    <span className="text-[6.5px] font-semibold leading-tight text-purple-200 whitespace-nowrap">CBUQ • Capa Asfáltica</span>
                   </div>
                   <div
-                    className="flex flex-1 min-w-0 relative overflow-hidden h-[18px]"
+                    className="flex flex-1 min-w-0 relative overflow-hidden h-[24px]"
                     style={{ backgroundColor: '#fef08a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', minWidth: 0, boxSizing: 'border-box' }}
                   >
                     <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed pointer-events-none z-10" style={{ borderColor: '#d97706', opacity: 0.8 }} />
                     {chunk.segments.map((seg) => (
                       <div
                         key={`r-f3-${seg.id}`}
-                        className="estaca-item shrink-0 h-[18px] border-r"
+                        className="estaca-item shrink-0 h-[24px] border-r"
                         style={{
                           backgroundColor: getEixoPistaColor(seg) || '#fef08a',
                           width: segWidthPct,
@@ -429,22 +429,22 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[16px]"
+                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[22px]"
                     style={{ backgroundColor: '#1e1b4b', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
-                    <span className="font-extrabold text-[8px] tracking-tight uppercase truncate">LD ACOSTAMENTO</span>
-                    <span className="text-[6px] font-semibold leading-none text-amber-300">
+                    <span className="font-extrabold text-[8.5px] leading-tight tracking-tight uppercase whitespace-nowrap">LD ACOSTAMENTO</span>
+                    <span className="text-[6.5px] font-semibold leading-tight text-amber-300 whitespace-nowrap">
                       {isPavedContract ? 'Sub-base BGS • Imprimação • Pintura' : 'Conformação • Regularização'}
                     </span>
                   </div>
                   <div
-                    className="flex flex-1 min-w-0 overflow-hidden h-[16px]"
+                    className="flex flex-1 min-w-0 overflow-hidden h-[22px]"
                     style={{ backgroundColor: '#fef08a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', minWidth: 0, boxSizing: 'border-box' }}
                   >
                     {chunk.segments.map((seg) => (
                       <div
                         key={`r-f4-${seg.id}`}
-                        className="estaca-item shrink-0 h-[16px] border-r"
+                        className="estaca-item shrink-0 h-[22px] border-r"
                         style={{
                           backgroundColor: getAcostamentoLdColor(seg) || '#fef08a',
                           width: segWidthPct,
@@ -465,20 +465,20 @@ export const LinearReportSheet: React.FC<LinearReportSheetProps> = ({
                   style={{ width: '100%', boxSizing: 'border-box', borderColor: '#cbd5e1' }}
                 >
                   <div
-                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[16px]"
+                    className="shrink-0 border-r border-slate-600 px-1.5 py-0.5 flex flex-col justify-center items-center text-center text-white h-[22px]"
                     style={{ backgroundColor: '#1e1b4b', color: '#ffffff', minWidth: '220px', width: '220px', maxWidth: '220px', flex: '0 0 220px', boxSizing: 'border-box', borderColor: '#475569' }}
                   >
-                    <span className="font-extrabold text-[8px] tracking-tight uppercase truncate">LD FAIXA DE DOMÍNIO</span>
-                    <span className="text-[6px] font-semibold leading-none text-emerald-300">Roçada Manual • Drenagem • Limpeza</span>
+                    <span className="font-extrabold text-[8.5px] leading-tight tracking-tight uppercase whitespace-nowrap">LD FAIXA DE DOMÍNIO</span>
+                    <span className="text-[6.5px] font-semibold leading-tight text-emerald-300 whitespace-nowrap">Roçada Manual • Drenagem • Limpeza</span>
                   </div>
                   <div
-                    className="flex flex-1 min-w-0 overflow-hidden h-[16px]"
+                    className="flex flex-1 min-w-0 overflow-hidden h-[22px]"
                     style={{ backgroundColor: '#fef08a', width: 'calc(100% - 220px)', maxWidth: 'calc(100% - 220px)', flex: '1 1 0%', minWidth: 0, boxSizing: 'border-box' }}
                   >
                     {chunk.segments.map((seg) => (
                       <div
                         key={`r-f5-${seg.id}`}
-                        className="estaca-item shrink-0 h-[16px] border-r"
+                        className="estaca-item shrink-0 h-[22px] border-r"
                         style={{
                           backgroundColor: getFaixaDominioLdColor(seg) || '#fef08a',
                           width: segWidthPct,

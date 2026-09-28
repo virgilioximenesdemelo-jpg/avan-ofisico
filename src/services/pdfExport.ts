@@ -80,6 +80,15 @@ export function cleanClonedDocForPdfExport(clonedDoc: Document, clonedEl?: HTMLE
       console.warn('Aviso ao sanitizar oklch em atributos inline:', err);
     }
 
+    // Garantir que os rótulos de faixas e estacas tenham renderização nítida sem corte de texto no canvas
+    try {
+      const textSpans = clonedEl.querySelectorAll<HTMLElement>('.estaca-row span');
+      textSpans.forEach((span) => {
+        span.style.overflow = 'visible';
+        span.style.textOverflow = 'clip';
+      });
+    } catch (err) {}
+
     // Higienizar toda a árvore de ancestrais para evitar sobreposição ou corte pelo html2canvas
     let parent = clonedEl.parentElement;
     while (parent && parent !== clonedDoc.body && parent !== clonedDoc.documentElement) {
